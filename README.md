@@ -1,116 +1,124 @@
-# Hadoop docker setup
+BASICS :
 
-## About
+start terminal
 
-A Docker compose setup for the following tools
-- Hadoop
-- Pig
-- HBase
-- Hive
-- Spark
-- ZooKeeper (startup by init-extra)
-- Mahout (startup by init-extra)
-- Kafka (startup by init-extra)
+ls (check for hadoop-docker-compose )
+cd hadoop-docker-compose
 
-Currently only consists of one master node. (Which is enough to run programs)
+./run.sh
+init
 
-## Credit
+-> #mode
+ls - to see the files
+hdfs dfs -mkdir /nameofdirectory
 
-Derived from the [docker-hadoop repo](https://github.com/silicoflare/docker-hadoop)
+nano input.txt/py/scala/pig/csv - to create and enter into the file to write further codes
 
-## Setup
+to exit nano file - CTRL +S , CTRL X OR CTRL 0 , ENTER , CTRL-X
 
-- Windows
-  1. Install [Docker desktop](https://docs.docker.com/desktop/install/windows-install/).
-  2. Run Docker desktop to start the Docker engine
-  3. Clone the [repository](https://github.com/dhzdhd/hadoop-docker-compose.git) locally (`git clone <url>`)
-  4. `cd <cloned_repo_directory>`
-  5. If you are using the terminal
-     1. Run `./run.ps1` in the repository root directory.
-     2. Run `init`
-  6. If you want to use Docker desktop UI instead
-     1. Run `exit`
-     2. Open Docker desktop UI and start the container (run button)
-     3. Click on the container named `master`
-     4. Head on to the `Exec` tab
-     5.  Run the following in the terminal displayed
-         - `bash`
-         - `init`
-  7. Test Hadoop commands to verify successful build.
-- Linux
-  1. Install [Docker engine](https://docs.docker.com/engine/install/).
-  2. Follow the [Post Installation Steps (Configure Docker to start on boot only)](https://docs.docker.com/engine/install/linux-postinstall/#configure-docker-to-start-on-boot-with-systemd).
-  3. Clone the [repository](https://github.com/dhzdhd/hadoop-docker-compose.git) locally (`git clone <url>`)
-  4. `cd <cloned_repo_directory>`
-  5. Run `chmod 777 ./run.sh` in the repository root directory.
-  6. Run `./run.sh`
-  7. Run `init`
-  8. Test Hadoop commands to verify successful build.
-- Read the `Post install` section
+rm name.txt - to remove the file
 
-## Post install
+hdfs dfs -put file.txt /nameofdir 
+hdfs dfs -ls / (to see all directories inside)
 
-1. `cd <cloned_repo_directory>`
-2. Run `./run.ps1` or `./run.sh` depending on your platform.
-3. Run `init`.
+localhost:9870 - for streaming check - Utilities-FileSystem
 
-## Setup Extra (only if you need Mahout & Kafka)
+??
+./start-all.sh
 
-- Run the above steps but use `init-extra` instead of `init`
+?????
+hdfs dfs -copyFromLocal your_local_path /user/your_username/your_directory/
+hdfs dfs -cat /user/your_username/your_directory/your_file (print contents)
+hdfs dfs -copyToLocal /user/your_username/your_directory/your_file your_local_path
+hdfs dfs -mv /user/your_username/source_dir/your_file /user/your_username/destination_dir/(Move files within)
+hdfs dfs -chmod 777 /user/your_username/your_directory/your_file (permissions)
+hdfs dfs -getmerge /user/your_username/source_dir/ /your_local_path/combined_file
 
-## Note
 
-### Data loss
 
-- The current configuration does not store any data on HDFS/HBase. Please backup everything you create in the `/workdir` directory which is directly mapped to your system.
 
-### Hive MetastoreSessionClient error
 
-- Hive should always be started from the `/` directory (root)
-- When you enter the container, the default directory is the root directory
-- Starting Hive from any other directory causes the metastore to get corrupted
 
-### Any sort of Hadoop error (MapReduce/Hive/HBase)
+MAPREDUCE(NORMAL #MODE)  :
 
-- Exit the container (`exit`), `./run.ps1`|`.run.sh` and `init`
+create input file and enter values
+create mapper file as nano mapper.py 
+create reducer as reducer.py
 
-### Pig takes way too much time and produces errors in mapreduce mode
+To Execute :
 
-- Start the job history server with `mapred historyserver &` (press enter to exit the logs)
-- Run pig in mapreduce mode as normal
+cat input.txt | python3 mapper.py
+cat input.txt | python3 mapper.py | sort | python3 reducer.py
 
-### ./run.ps1 not recognised as a command (Windows only)
+Streaming - 
 
-- This error occurs when you are using command prompt
-- run.ps1 is a PowerShell file and hence should be run with PowerShell only
+mapred streaming -input /inputpathhdfs -output /outputpathhdfs -file /pathtomapper.py -mapper /pathtomapper.py -reducer /pathtoreucer.py -file/pathtoreducer.py
 
-### run.ps1 cannot be loaded because running scripts is disabled on this system (Windows only)
+here -
+inputpath should always be in hdfs directory
+outpath can be /mydir/out - stores output in out inside hdfs directory 
+/parthtomapper can be just mapper.py in local
+/pathtoreducer can be just reducer.py in local
 
-- Enable running foreign scripts in `Developer Settings` in the Settings application.
-- Refer to the net for more information.
+or both file and mapper/reducer
 
-### Hadoop errors out after `restart`
 
-- `restart` has been deprecated
-- Simply run `exit`, `./run.ps1`|`.run.sh` and `init`
 
-### Error on container build (download step)
 
-- Your workplace/institute has probably blocked a link used to download one of the Hadoop tools.
-- Connect to your local internet/hotspot to continue building.
 
-### Accessing your files for backup/host usage
+PIG(NORMAL #MODE) :
 
-- The `/workdir` directory in the container is linked to `<cloned_repo_directory>/workdir` on the host
-- Any files you want to access on the host have to be saved/moved to `/workdir`
+Create the text file using nano ip.txt - enter the code
+use hdfs dfs -put (...) to transfer file to the directory you have made
 
-### Accessing HDFS through URL
+create pigscript file using nano pigs.pig - enter the code -
 
-- You can access HDFS through the URL - `hdfs://master:9000`
-- For example
-  - `hadoop fs -ls /` is equivalent to `hadoop fs -ls hdfs://master:9000/`
+NOW - mapreduce mode(file needs to be availabe in hdfs directory in pigscript code ) -
+ 
+pig -x mapreduce pigscript.pig
 
-### Accessing the web UI
+but local mode -
 
-- Access the web interfaces at `localhost:8088` and `localhost:9870`
-- Port `9000` is also exposed to host but cannot and should not be accessed
+pig -x local pigscript.pig
+
+INSIDE-PIG-CODE: STORE AND LOAD INTO SHOULD BE MAINTAINED
+
+
+
+
+SPARK(scala mode) :
+
+*To enter scala mode -
+spark-shell 
+
+*OR ( if you dont want to enter the scala , line by line mode , you can just create scala file in #mode and run it using )-
+
+create scala file using nano input.scala - fill the code 
+
+*Run the code in #mode(but this executes in scala mode):
+
+spark-shell -i name.scala
+
+now further inside scala you can run your codes line by line as wish/code
+
+
+
+
+PYSPARK(NORMAL #MODE):
+
+create the nano name.py file and enter the code 
+
+for which you will also have to create a nano data.csv file and enter values 
+
+
+TO RUN :
+
+python3 name.py
+
+
+
+
+
+HIVE : 
+
+HBASE:
